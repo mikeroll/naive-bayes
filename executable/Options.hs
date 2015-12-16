@@ -6,17 +6,23 @@ module Options
 import Options.Applicative
 
 data Options = Options
-    { dummy :: String
+    { infile :: FilePath
+    , dataSplit :: Int
     }
 
 opts :: Parser Options
 opts = Options
-    <$> option str
-        ( long "dummy"
-       <> value "" )
+    <$> argument str
+        ( metavar "INFILE" )
+    <*> option auto
+        ( long "data-split"
+       <> short 's'
+       <> value 80
+       <> showDefault
+       <> help "Training data share percent." )
 
 bayesOpts :: ParserInfo Options
 bayesOpts = info (helper <*> opts)
-           ( fullDesc
-          <> progDesc "Classify objects from INFILE using Naïve Bayes method"
-          <> header "Naïve Bayes clustering sample program" )
+            ( fullDesc
+           <> progDesc "Classify objects from INFILE using Naïve Bayes method"
+           <> header "Naïve Bayes clustering sample program" )

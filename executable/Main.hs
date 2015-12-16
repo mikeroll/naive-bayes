@@ -4,6 +4,6 @@ import Options.Applicative
 import Options
 
 program :: Options -> IO ()
-program (Options dummy) = putStrLn "Hello Bayes"
+program opts = putStrLn "Hello Bayes"
 
 main = execParser bayesOpts >>= program
