@@ -69,6 +69,15 @@ likelihood x c = ap * pxc
 tell :: Classifier -> Object -> Class
 tell model obj = argmax (likelihood obj) $ classes model
 
+-- | Best classifier
+best :: (RandomGen g) => [g] -> Double -> Dataset -> Classifier
+best gs share set = best
+    where
+        (best, _) = argmin (\(m, tst) -> test m tst) cases
+        cases = [ (model trn, tst) | (trn, tst) <- splits ]
+        splits = map (\g -> splitDataset g share set) gs
+        model = train (genericLength set)
+
 -- | Splits a given dataset into train and test sets
 splitDataset :: (RandomGen g) => g -> Double -> Dataset -> (Dataset, Dataset)
 splitDataset g share set = branch share $ zip rs set
