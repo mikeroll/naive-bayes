@@ -1,5 +1,11 @@
 module NaiveBayes
-( splitDataset
+( Class
+, Classifier
+, classMap
+, train
+, likelihood
+, tell
+, splitDataset
 ) where
 
 import System.Random
@@ -11,6 +17,7 @@ import Statistics
 
 type Feature = Double
 type Object  = [Feature]
+type Index   = Int
 type Label   = String
 type Dataset = [(Object, Label)]
 
@@ -23,6 +30,7 @@ data Class = Class
 
 data Classifier = Classifier
     { classes :: [Class]
+    , trainedOn :: [Index]
     }
 
 -- | Groups objects into classes
@@ -30,19 +38,23 @@ classMap :: [(Object, Label)] -> [(Label, [Object])]
 classMap h = toList $ fromListWith (++) [(label, [obj]) | (obj, label) <- h]
 
 -- | Extracts available classes, centers and a priori probabilities from the training set
-makeClasses :: (Dataset, Dataset) -> [Class]
-makeClasses (train, test) = map makeClass $ classMap train
+train :: Double -> Dataset -> Classifier
+train total set =
+    Classifier { classes = map makeClass . classMap $ set
+               , trainedOn = [] }
     where
-        total = genericLength train + genericLength test
         makeClass (label, objs) =
             Class { label = label
                   , aprioriP = genericLength objs / total
                   , cMean = cmean
-                  , cDispersion = cdisp
-                  }
+                  , cDispersion = cdisp }
           where
             cmean = mean2d objs
             cdisp = dispersion2d cmean objs
+
+-- | Tests a classifier against test data returning number of errors
+test :: Classifier -> Dataset -> Int
+test model = length . filter (\(o, l) -> label (tell model o) == l)
 
 -- | Probability of object being a part of class
 likelihood :: (Floating f) => Object -> Class -> Double
