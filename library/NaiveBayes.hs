@@ -44,7 +44,7 @@ makeClasses (train, test) = map makeClass $ classMap train
             cmean = mean2d objs
             cdisp = dispersion2d cmean objs
 
---
+-- | Probability of object being a part of class
 likelihood :: (Floating f) => Object -> Class -> Double
 likelihood x c = ap * pxc
     where
