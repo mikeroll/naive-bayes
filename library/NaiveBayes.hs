@@ -1,10 +1,15 @@
 module NaiveBayes
-( Class
+( Class(..)
 , Classifier
+, Feature
+, Object
+, Label
+, Dataset
 , classMap
 , train
 , likelihood
-, tell
+, tellObj
+, best
 , splitDataset
 ) where
 
@@ -12,6 +17,9 @@ import System.Random
 import Data.List
 import Data.List.Extras
 import Data.Map (toList, fromListWith)
+
+import Control.Monad.Writer
+import Control.Parallel.Strategies
 
 import Statistics
 
@@ -26,12 +34,12 @@ data Class = Class
     , aprioriP :: Double
     , cMean :: Object
     , cDispersion :: [Double]
-    }
+    } deriving Show
 
 data Classifier = Classifier
     { classes :: [Class]
     , trainedOn :: [Index]
-    }
+    } deriving Show
 
 -- | Groups objects into classes
 classMap :: [(Object, Label)] -> [(Label, [Object])]
@@ -54,7 +62,7 @@ train total set =
 
 -- | Tests a classifier against test data returning number of errors
 test :: Classifier -> Dataset -> Int
-test model = length . filter (\(o, l) -> label (tell model o) == l)
+test model = length . filter (\(o, l) -> label (tellObj model o) == l)
 
 -- | Probability of object being a part of class
 likelihood :: (Floating f) => Object -> Class -> Double
@@ -66,17 +74,18 @@ likelihood x c = ap * pxc
         pxc = product $ zipWith3 normalDensity cms cds x
 
 -- | Tells the most appropriate class for an object
-tell :: Classifier -> Object -> Class
-tell model obj = argmax (likelihood obj) $ classes model
+tellObj :: Classifier -> Object -> Class
+tellObj model obj = argmax (likelihood obj) $ classes model
 
 -- | Best classifier
-best :: (RandomGen g) => [g] -> Double -> Dataset -> Classifier
-best gs share set = best
-    where
-        (best, _) = argmin (\(m, tst) -> test m tst) cases
+best :: (RandomGen g) => [g] -> Double -> Dataset -> Writer String Classifier
+best gs share set = do
+    let model = train (genericLength set)
         cases = [ (model trn, tst) | (trn, tst) <- splits ]
-        splits = map (\g -> splitDataset g share set) gs
-        model = train (genericLength set)
+        (best, _) = argmin (\(m, tst) -> test m tst) cases
+        splits = parMap rpar (\g -> splitDataset g share set) gs
+    tell (show best ++ " is the best in this run.")
+    return best
 
 -- | Splits a given dataset into train and test sets
 splitDataset :: (RandomGen g) => g -> Double -> Dataset -> (Dataset, Dataset)
