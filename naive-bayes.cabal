@@ -10,29 +10,20 @@ maintainer:          scaryspiderpig@gmail.com
 build-type:          Simple
 cabal-version:       >=1.10
 
-library
-  hs-source-dirs:      library
-  build-depends:       base >=4.8 && <4.9
-                     , random
-                     , containers
-                     , list-extras
-                     , mtl
-                     , parallel
-  exposed-modules:     NaiveBayes
-                     , Statistics
-                     , InputUtils
-  default-language:    Haskell2010
-
 executable naive-bayes
   main-is:             Main.hs
   build-depends:       base >=4.8 && <4.9
-                     , naive-bayes
                      , random
                      , conduit
                      , resourcet
                      , transformers
                      , optparse-applicative
                      , mtl
+                     , random
+                     , containers
+                     , list-extras
+                     , mtl
+                     , parallel
   hs-source-dirs:      executable
   default-language:    Haskell2010
 
